@@ -3,25 +3,14 @@
 # otherwise this runs nice...code could be made prettier though
 
 
-
 from GTO_TTT import gto
 import matplotlib.pyplot as plt
-#import tensorflow as tf
 import numpy as np
+import time 
+
 ###### overall still some improvements to be made... however the grundgerüst steht...
 ###### still to do: implement the possibility of having either player start first
 ###### also: maybe make the code prettier
-
-# q_network = tf.keras.Sequential([
-#     tf.keras.layers.Input(shape = 9),
-#     tf.keras.layers.Dense(64, activation='relu'),
-#     tf.keras.layers.Dense(64, activation='relu'),
-#     tf.keras.layers.Dense(1, activation='relu'),
-# ])
-
-# Load the weights
-
-#q_network.load_weights('model_network.h5')
 
 # Create the Board ### Not sure yet about the colors of the stripes...
 def draw_board(ax, N):
@@ -137,7 +126,6 @@ def on_key(event):
     if placeholder:
         win, who = winning_condition(np.sum(boards, axis = 0))
         print(f'Player {int(who) +1} wins the game!')
-        import time
         time.sleep(2)
         print('Thank You for playing!')
         time.sleep(1)
@@ -145,7 +133,6 @@ def on_key(event):
         plt.close('all')
     elif np.sum(np.sum(boards, axis = 0) == 0) == 0:
         print(' This is a Tie!')
-        import time
         time.sleep(2)
         print('Thank You for playing!')
         time.sleep(1)
@@ -199,7 +186,6 @@ def on_key(event):
             win, who = winning_condition(np.sum(boards, axis = 0))
             if win:
                 print(f'Player {int(who) +1} wins the game!')
-                import time
                 time.sleep(2)
                 print('Thank You for playing!')
                 time.sleep(1)
@@ -207,7 +193,6 @@ def on_key(event):
                 plt.close('all')
             elif np.sum(np.sum(boards, axis = 0) == 0) == 0:
                 print(' This is a Tie!')
-                import time
                 time.sleep(2)
                 print('Thank You for playing!')
                 time.sleep(1)
@@ -215,95 +200,9 @@ def on_key(event):
             marker.set_data(Board)
             fig.canvas.draw_idle()
             cross = not cross
-            #
-            #print(np.sum(boards, axis = 0))
-            #
-            #print()
-            #here comes the machine learning code
-
-
-            #
-            #if computer wins, the text wird noch nicht gezeigt
-            
-            #here is the q_network-code:
-            # import time
-            # time.sleep(0.35)
-            # q_values = q_network(tf.reshape(np.sum(boards, axis=0).ravel(), (1,9))).numpy()
-            # tmp_board = np.sum(boards, axis=0).ravel()
-            # arg_sort = np.argsort( - q_values)[0]
-            # print(arg_sort)
-            # num = 0
-            # while num < 9:
-            #     if tmp_board[arg_sort[num]] == 0:
-            #         move_index = int( arg_sort[num] )
-            #         num = 9
-
-            #     else:
-            #         num += 1
-                    
-            # current_selection = selections[move_index]
-            # #
-            # # here we have copied the same code from above... maybe we can make it shorter
-            # Board = draw_move(Board, current_selection,N, cross)
-            # if cross:
-            #     boards.append(current_selection )
-            # else:
-            #     boards.append(current_selection * -1)
-               
-               
-            # marker.set_data(Board)
-            # fig.canvas.draw_idle()
-            # cross = not cross
-               
-            # win, who = winning_condition(np.sum(boards, axis = 0))
-            # if  who:
-            #     placeholder = True
-            
-            
-            # here is the averaging q-network code:
-            # doesnt quite work yet though
-            
-            # zeros = (np.sum(boards, axis=0).ravel() == 0)
-            # predicts = []
-            # # print(model.predict(tf.reshape(board, (1,9)) ) )
-            # print(zeros)
-            # for i in range(sum(zeros)):
-            #     tmp_board = np.sum(boards, axis=0).copy() + selections[zeros][i]
-            #     predicts.append(q_network.predict( tf.reshape(tmp_board, (1,9)) )[0][0] )
-            
-            # import time
-            # time.sleep(0.35)
-            # #tmp_board_now = np.sum(boards, axis=0).ravel()
-            # #arg_sort = np.argsort(predicts, order=-1)
-            # counter = 0
-            # for z in range(9):
-            #     if zeros[z]:
-            #         counter += 1
-            #     if counter == np.argmax(predicts):
-            #         move_index = z
-                    
-            # current_selection = selections[move_index]
-            # #
-            # # here we have copied the same code from above... maybe we can make it shorter
-            # Board = draw_move(Board, current_selection,N, cross)
-            # if cross:
-            #     boards.append(current_selection )
-            # else:
-            #     boards.append(current_selection * -1)
-               
-               
-            # marker.set_data(Board)
-            # fig.canvas.draw_idle()
-            # cross = not cross
-               
-            # win, who = winning_condition(np.sum(boards, axis = 0))
-            # if  who:
-            #     placeholder = True
            
-            # here is the gto_min_max-code_
-            
+
            # # # wir tricksen hier grad noch in dem ersten und zweiten zug, damit es schneller geht
-            import time
             time.sleep(0.35)
            
             tmp_board = np.sum(boards, axis=0).ravel()
@@ -320,7 +219,8 @@ def on_key(event):
                    
             else:
                 new_board = gto(tmp_board, cross)[1]
-                move_index = np.argmax(new_board-tmp_board.ravel())
+                move_index = np.argmax(np.abs(new_board-tmp_board.ravel()))
+                print(move_index)
             # print(move_index)
          
           
@@ -365,8 +265,9 @@ alert = False
 boards = []
 draw_board(ax, N)
 
-# first_move = np.array([0,0,0,0,0,1,0,0,0]).reshape(3,3)
-# boards.append(first_move)
+first_move = np.array([0,0,0,0,0,0,0,0,0])
+first_move[np.random.randint(9)] = 1 
+boards.append(first_move.reshape(3,3))
 
 Board = convert_board_to_Board(current_selection, ax, N)
 move = draw_move(Board, current_selection,N, cross = False)
