@@ -55,13 +55,14 @@ from Interactive_Board import draw_board, draw_circle
 ## Future Improvements
 
 - 1. clean up code!!! -- check
-- 2. Implement player choice for who goes first
+- 2. first move of agent could be gto instead of random
 - 3. Add randomization to GTO for varied gameplay
 - 4. Optimize code readability and performance
-- 5. create unit test for interactive board
+- 5. visit and understand unit test for interactive board
+- 6. remove cashing_example.py file from project
 
-- 5. Integrate machine learning components
-- 6. Add command-line interface
+- 7. Integrate machine learning components
+- 8. Add command-line interface
 
 ## License
 

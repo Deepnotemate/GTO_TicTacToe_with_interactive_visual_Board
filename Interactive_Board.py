@@ -6,13 +6,14 @@ from GTO_TTT import TicTacToeAI
 
 
 class TicTacToeGame:
-    def __init__(self):
+    def __init__(self, human_goes_first=input('Do you want to go first? (y/any key): ').lower() == 'y'):
         self.N = 100
         self.agent = TicTacToeAI()
         self.fig, self.ax = plt.subplots()
         self.ax.set_aspect('equal')
         self.ax.set_xticks([])
         self.ax.set_yticks([])
+        self.human_goes_first = human_goes_first
         
         # Game state variables
         self.boards = []
@@ -212,9 +213,11 @@ class TicTacToeGame:
         # Initialize game board
         self.draw_board()
         
-        first_move = np.array([0,0,0,0,0,0,0,0,0])
-        first_move[np.random.randint(9)] = 1 
-        self.boards.append(first_move.reshape(3,3))
+        
+        first_move = np.array([0,0,0,0,0,0,0,0,0])    
+        if not self.human_goes_first:
+            first_move[np.random.randint(9)] = 1 
+        self.boards.append(first_move.reshape(3,3))    
         
         Board = self.visualize_game_state(self.current_selection)
         move = self.highlight_move(Board, self.current_selection, cross = False)
@@ -227,7 +230,3 @@ class TicTacToeGame:
         plt.show()
 
 
-# Main execution
-if __name__ == '__main__':
-    game = TicTacToeGame()
-    game.run()
