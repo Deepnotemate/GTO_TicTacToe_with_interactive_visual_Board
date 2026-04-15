@@ -10,7 +10,8 @@ class TicTacToeAI:
     EMPTY = 0
     
     def __init__(self):
-        pass
+        """Initialize the AI with an empty cache for memoization."""
+        self.cache = {}
     
     def _get_player_mark(self, is_human):
         """Get the mark for a player (1 for human, -1 for AI)."""
@@ -101,7 +102,7 @@ class TicTacToeAI:
         return human_won or ai_won or board_full
     
     def gto(self, board, is_human):
-        """Game Theory Optimal move using minimax algorithm.
+        """Game Theory Optimal move using minimax algorithm with memoization.
         
         Args:
             board: Current board state
@@ -110,9 +111,19 @@ class TicTacToeAI:
         Returns:
             Tuple of (best_score, best_board)
         """
+        # Convert board to tuple for hashing (cache key)
+        board_tuple = tuple(board)
+        cache_key = (board_tuple, is_human)
+        
+        # Check if we've already solved this position
+        if cache_key in self.cache:
+            return self.cache[cache_key]
+        
         # Base case: game over
         if self._is_game_over(board):
-            return self.evaluate_move(board), board
+            result = (self.evaluate_move(board), board)
+            self.cache[cache_key] = result
+            return result
         
         # Recursive case: evaluate all possible moves
         possible_boards = self.get_possible_boards(board, is_human)
@@ -122,7 +133,11 @@ class TicTacToeAI:
         best_index = np.argmax(move_scores) if is_human else np.argmin(move_scores)
         best_board = possible_boards[best_index]
         
-        return move_scores[best_index], best_board
+        # Cache the result before returning
+        result = (move_scores[best_index], best_board)
+        self.cache[cache_key] = result
+        
+        return result
     
     def get_best_move(self, board):
         """Get the best move for the AI.
@@ -135,3 +150,11 @@ class TicTacToeAI:
         """
         _, best_board = self.gto(board, is_human=False)
         return best_board
+    
+    def clear_cache(self):
+        """Clear the memoization cache. Useful for starting a new game."""
+        self.cache = {}
+    
+    def get_cache_size(self):
+        """Get the current number of cached positions."""
+        return len(self.cache)
