@@ -6,7 +6,6 @@ Tests with pytest for all functions of the TicTacToeAI class.
 Run with: pytest testing/test_gto_ttt.py -v
 """
 
-import pytest
 import numpy as np
 from GTO_TTT import TicTacToeAI
 
