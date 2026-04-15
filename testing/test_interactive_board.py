@@ -9,7 +9,7 @@ Run with: pytest testing/test_interactive_board.py -v
 import numpy as np
 import sys
 sys.path.insert(0, '.')
-from Interactive_Board_classes import TicTacToeGame
+from Interactive_Board import TicTacToeGame
 
 
 class TestTicTacToeGame:
