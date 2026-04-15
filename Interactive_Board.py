@@ -3,11 +3,12 @@
 # otherwise this runs nice...code could be made prettier though
 
 
-from GTO_TTT import gto
+from GTO_TTT import TicTacToeAI
 import matplotlib.pyplot as plt
 import numpy as np
 import time 
 
+agent = TicTacToeAI()
 ###### overall still some improvements to be made... however the grundgerüst steht...
 ###### still to do: implement the possibility of having either player start first
 ###### also: maybe make the code prettier
@@ -218,7 +219,7 @@ def on_key(event):
                     #move_index = np.argsort(np.sum(boards, axis = 0).ravel() - np.random.rand(9)/100)[0] # with this there is one way to beat him hehe
                    
             else:
-                new_board = gto(tmp_board, cross)[1]
+                new_board = agent.gto(tmp_board, cross)[1]
                 move_index = np.argmax(np.abs(new_board-tmp_board.ravel()))
                 print(move_index)
             # print(move_index)

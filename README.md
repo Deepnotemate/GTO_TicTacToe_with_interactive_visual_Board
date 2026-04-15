@@ -54,11 +54,13 @@ from Interactive_Board import draw_board, draw_circle
 
 ## Future Improvements
 
-- Implement player choice for who goes first
-- Add randomization to GTO for varied gameplay
-- Optimize code readability and performance
-- Integrate machine learning components
-- Add command-line interface
+- 1. clean up code!!!
+- 2. Implement player choice for who goes first
+- 3. Add randomization to GTO for varied gameplay
+- 4. Optimize code readability and performance
+
+- 5. Integrate machine learning components
+- 6. Add command-line interface
 
 ## License
 
