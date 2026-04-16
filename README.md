@@ -6,9 +6,7 @@ A small Python project that combines **game theory**, **minimax search**, and a 
 
 ## Preview
 
-A short gameplay GIF can be added later in the assets folder to showcase the project visually on GitHub.
-
-<!-- Example: ![Gameplay Demo](assets/tictactoe-demo.gif) -->
+![Gameplay Demo](assets/tictactoe-demo.gif)
 
 ## Features
 
