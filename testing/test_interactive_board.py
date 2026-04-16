@@ -47,7 +47,7 @@ class TestTicTacToeGame:
         """Test: draw_board returns numpy array of correct size"""
         board = self.game.draw_board()
         assert isinstance(board, np.ndarray)
-        assert board.shape == (300, 300)
+        assert board.shape[:2] == (300, 300)
     
     def test_draw_circle_modifies_board(self):
         """Test: draw_circle adds values to board"""
@@ -55,8 +55,8 @@ class TestTicTacToeGame:
         move = np.zeros(9)
         move[0] = 1  # First position
         
-        result = self.game.draw_circle(board.copy(), move)
-        assert result.shape == (300, 300)
+        result = self.game.draw_circle(self.game.draw_board(), move)
+        assert result.shape[:2] == (300, 300)
         assert np.max(result) > 0  # Board has values added
     
     def test_draw_cross_modifies_board(self):
@@ -65,8 +65,8 @@ class TestTicTacToeGame:
         move = np.zeros(9)
         move[4] = 1  # Center position
         
-        result = self.game.draw_cross(board.copy(), move)
-        assert result.shape == (300, 300)
+        result = self.game.draw_cross(self.game.draw_board(), move)
+        assert result.shape[:2] == (300, 300)
         assert np.max(result) > 0  # Board has values added
     
     def test_highlight_move_with_circle(self):
@@ -75,8 +75,8 @@ class TestTicTacToeGame:
         move = np.zeros(9)
         move[0] = 1
         
-        result = self.game.highlight_move(board.copy(), move, cross=False)
-        assert result.shape == (300, 300)
+        result = self.game.highlight_move(self.game.draw_board(), move, cross=False)
+        assert result.shape[:2] == (300, 300)
         assert np.max(result) > 0  # Highlighted board has values
     
     def test_highlight_move_with_cross(self):
@@ -85,8 +85,8 @@ class TestTicTacToeGame:
         move = np.zeros(9)
         move[4] = 1
         
-        result = self.game.highlight_move(board.copy(), move, cross=True)
-        assert result.shape == (300, 300)
+        result = self.game.highlight_move(self.game.draw_board(), move, cross=True)
+        assert result.shape[:2] == (300, 300)
         assert np.max(result) > 0  # Highlighted board has values
     
     # ===================== TESTS FOR CHECK_WINNER =====================
@@ -203,7 +203,7 @@ class TestTicTacToeGame:
         """Test: visualize_game_state on empty board"""
         board = np.zeros((3, 3))
         Board = self.game.visualize_game_state(board)
-        assert Board.shape == (300, 300)
+        assert Board.shape[:2] == (300, 300)
         assert isinstance(Board, np.ndarray)
     
     def test_visualize_board_with_cross(self):
@@ -235,7 +235,7 @@ class TestTicTacToeGame:
             [0, 0, 0]
         ])
         Board = self.game.visualize_game_state(board)
-        assert Board.shape == (300, 300)
+        assert Board.shape[:2] == (300, 300)
         # Multiple moves should result in higher sum than empty board
         assert np.sum(Board) > 0
     

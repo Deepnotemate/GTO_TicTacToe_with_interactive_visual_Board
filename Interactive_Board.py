@@ -2,14 +2,16 @@ import time
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import to_rgb
 
 from GTO_TTT import TicTacToeAI
 
 BOARD_SIZE = 3
 DEFAULT_CELL_SIZE = 100
 GRID_COLOR = 'gray'
-MARK_COLOR = 0.3
-HIGHLIGHT_COLOR = 0.35
+MARK_COLOR_CROSS = 30
+MARK_COLOR_CIRCLE = 30
+HIGHLIGHT_COLOR = 60
 AI_DELAY_SECONDS = 0.35
 RESULT_DELAY_SECONDS = 2
 CLOSE_DELAY_SECONDS = 1
@@ -60,9 +62,18 @@ class TicTacToeGame:
         return self.agent.is_board_full(board.ravel())
 
     def _cycle_selection(self, step: int) -> None:
-        """Move the selection cursor left or right."""
+        """Move the selection cursor horizontally."""
         current_index = int(np.argmax(self.current_selection.ravel()))
-        self.current_selection = self.selections[(current_index + step) % 9]
+        row, col = divmod(current_index, BOARD_SIZE)
+        new_col = (col + step) % BOARD_SIZE
+        self.current_selection = self.selections[row * BOARD_SIZE + new_col]
+
+    def _move_selection_vertical(self, step: int) -> None:
+        """Move the selection cursor vertically on the 3x3 board."""
+        current_index = int(np.argmax(self.current_selection.ravel()))
+        row, col = divmod(current_index, BOARD_SIZE)
+        new_row = (row + step) % BOARD_SIZE
+        self.current_selection = self.selections[new_row * BOARD_SIZE + col]
 
     def _apply_move(self, move_index: int) -> None:
         """Add the current move to the board history."""
@@ -104,7 +115,7 @@ class TicTacToeGame:
             self._grid_drawn = True
         return np.zeros((BOARD_SIZE * self.N, BOARD_SIZE * self.N))
 
-    def draw_circle(self, board: np.ndarray, move: np.ndarray, color: float = MARK_COLOR) -> np.ndarray:
+    def draw_circle(self, board: np.ndarray, move: np.ndarray, color: float = MARK_COLOR_CIRCLE) -> np.ndarray:
         """Draw a circle marker on the selected cell."""
         rows, cols = np.ogrid[:self.N, :self.N]
         center = (self.N - 1) / 2
@@ -114,7 +125,7 @@ class TicTacToeGame:
         board += np.kron(move.reshape(BOARD_SIZE, BOARD_SIZE), circle)
         return board
 
-    def draw_cross(self, board: np.ndarray, move: np.ndarray, color: float = MARK_COLOR) -> np.ndarray:
+    def draw_cross(self, board: np.ndarray, move: np.ndarray, color: float = MARK_COLOR_CROSS) -> np.ndarray:
         """Draw a cross marker on the selected cell."""
         rows, cols = np.indices((self.N, self.N))
         padding_mask = (rows > 10) & (rows < self.N - 10) & (cols > 10) & (cols < self.N - 10)
@@ -141,9 +152,9 @@ class TicTacToeGame:
     def highlight_move(self, board: np.ndarray, move: np.ndarray, cross: bool = False) -> np.ndarray:
         """Overlay the currently selected move with a highlight."""
         if cross:
-            board = self.draw_cross(board, move, MARK_COLOR)
+            board = self.draw_cross(board, move, MARK_COLOR_CROSS)
         else:
-            board = self.draw_circle(board, move, MARK_COLOR)
+            board = self.draw_circle(board, move, MARK_COLOR_CIRCLE)
         board += np.kron(move.reshape(BOARD_SIZE, BOARD_SIZE), HIGHLIGHT_COLOR * np.ones((self.N, self.N)))
         return board
 
@@ -172,6 +183,16 @@ class TicTacToeGame:
 
         if event.key == 'left':
             self._cycle_selection(-1)
+            self._refresh_marker()
+            return
+
+        if event.key == 'up':
+            self._move_selection_vertical(-1)
+            self._refresh_marker()
+            return
+
+        if event.key == 'down':
+            self._move_selection_vertical(1)
             self._refresh_marker()
             return
 

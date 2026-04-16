@@ -1,43 +1,53 @@
-# Tic Tac Toe - Game Theory Optimal AI
+# Tic-Tac-Toe AI with Minimax
 
-A Python implementation of Tic Tac Toe with an AI opponent using Game Theory Optimization (GTO minimax algorithm).
+A small Python project that combines **game theory**, **minimax search**, and a **matplotlib-based interactive board** to create an unbeatable Tic-Tac-Toe opponent.
 
-## Overview
+> This repository was built as a learning project to explore adversarial search, clean game logic, and simple interactive UI design in Python.
 
-This project implements an unbeatable Tic Tac Toe AI using game-theoretic principles to find optimal moves. The AI analyzes all possible game states and selects moves that maximize its chances of winning or force a draw.
+## Preview
+
+A short gameplay GIF can be added later in the assets folder to showcase the project visually on GitHub.
+
+<!-- Example: ![Gameplay Demo](assets/tictactoe-demo.gif) -->
 
 ## Features
 
-- **GTO Algorithm**: Minimax-based optimal play
-- **Interactive Board**: Visual representation of the game board
-- **Unbeatable AI**: AI plays optimally every move
+- Unbeatable AI based on the **minimax algorithm**
+- Interactive visual game board using **matplotlib**
+- Clean separation between **game logic** and **UI rendering**
+- Unit tests for core AI logic and board behavior
+
+## Tech Stack
+
+- Python
+- NumPy
+- Matplotlib
+- Pytest
 
 ## Project Structure
 
+```text
+.
+├── GTO_TTT.py                 # Minimax / game-theory AI engine
+├── Interactive_Board.py       # Interactive board rendering and controls
+├── main.py                    # App entry point
+├── requirements.txt           # Dependencies
+├── pytest.ini                 # Pytest configuration
+└── testing/
+    ├── test_gto_ttt.py
+    └── test_interactive_board.py
 ```
-├── GTO_TTT.py              # Core game theory optimization engine
-├── Interactive_Board.py    # Board visualization and rendering
-├── testing/
-│   └── tester.py          # Test cases
-└── README.md
-```
 
-## Files
+## How It Works
 
-- **GTO_TTT.py**: Contains the minimax algorithm with:
-  - `winning_condition()`: Check for winning states
-  - `evaluate_move()`: Evaluate board positions
-  - `gto()`: Main game-theoretic optimal decision engine
+The AI evaluates possible future board states recursively using minimax:
 
-- **Interactive_Board.py**: Visualization functions:
-  - `draw_board()`: Renders the 3x3 grid
-  - `draw_circle()`: Draws player and AI moves
+- the **human** tries to maximize the score
+- the **AI** tries to minimize the score
+- terminal states are scored as win, loss, or draw
+- memoization is used to cache already-solved positions
 
-## Requirements
-
-- Python 3.x
-- numpy
-- matplotlib
+Because Tic-Tac-Toe has a small search space, the AI can play optimally every turn.
 
 ## Installation
 
@@ -45,29 +55,43 @@ This project implements an unbeatable Tic Tac Toe AI using game-theoretic princi
 pip install -r requirements.txt
 ```
 
-## Usage
+## Run the Project
 
-```python
-from GTO_TTT import gto
-from Interactive_Board import draw_board, draw_circle
+```bash
+python main.py
 ```
 
-## Future Improvements
+When the game starts, you can choose whether to go first.
 
-- 1. clean up code!!! -- check
-- 2. first move of agent could be gto instead of random
-- 3. Add randomization to GTO for varied gameplay
-- 4. Optimize code readability and performance
-- 5. visit and understand unit test for interactive board
-- 6. remove cashing_example.py file from project
+## Controls
 
-- 7. Integrate machine learning components
-- 8. Add command-line interface
+- **Arrow keys** → move the selection
+- **Enter** → place your move
+
+## Run Tests
+
+```bash
+pytest -v
+```
+
+## What I Learned
+
+This project helped me practice:
+
+- recursive decision-making with minimax
+- state evaluation in turn-based games
+- separating UI concerns from domain logic
+- writing tests for both logic and interactive components
+
+## Possible Next Improvements
+
+- improved visuals and animations
+- GitHub Actions test workflow
+- implement random moves of AI agent for equal game states
+- implement configurable difficulty
+- building an alternative AI agent trained through reinforcement learning 
+
 
 ## License
 
-MIT License
-
-## Author
-
-Created as a game theory learning project.
+MIT
