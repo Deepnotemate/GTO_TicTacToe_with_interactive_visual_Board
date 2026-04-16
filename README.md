@@ -1,6 +1,7 @@
 # Tic-Tac-Toe AI with Minimax
 
-A small Python project that combines **game theory**, **minimax search**, and a **matplotlib-based interactive board** to create an unbeatable Tic-Tac-Toe opponent.
+A small Python project that uses the **minimax search** to create an unbeatable Tic-Tac-Toe opponent.
+The game can be played using a **matplotlib-based interactive board**.
 
 > This repository was built as a learning project to explore adversarial search, clean game logic, and simple interactive UI design in Python.
 
