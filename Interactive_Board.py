@@ -1,231 +1,232 @@
-import numpy as np
-import matplotlib.pyplot as plt
 import time
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 from GTO_TTT import TicTacToeAI
 
+BOARD_SIZE = 3
+DEFAULT_CELL_SIZE = 100
+GRID_COLOR = 'gray'
+MARK_COLOR = 0.3
+HIGHLIGHT_COLOR = 0.35
+AI_DELAY_SECONDS = 0.35
+RESULT_DELAY_SECONDS = 2
+CLOSE_DELAY_SECONDS = 1
+
 
 class TicTacToeGame:
-    def __init__(self, human_goes_first=input('Do you want to go first? (y/any key): ').lower() == 'y'):
-        self.N = 100
+    """Interactive matplotlib board for playing Tic-Tac-Toe against the AI."""
+
+    def __init__(self, human_goes_first: bool | None = None, cell_size: int = DEFAULT_CELL_SIZE):
+        self.N = cell_size
         self.agent = TicTacToeAI()
         self.fig, self.ax = plt.subplots()
         self.ax.set_aspect('equal')
         self.ax.set_xticks([])
         self.ax.set_yticks([])
         self.human_goes_first = human_goes_first
-        
-        # Game state variables
-        self.boards = []
-        self.selections = np.zeros((9,3,3))
-        for i in range(9):
-            self.selections[i].ravel()[i] = 1
+
+        self.boards: list[np.ndarray] = []
+        self.selections = self._create_selections()
         self.current_selection = self.selections[0]
         self.cross = False
         self.placeholder = False
         self.marker = None
-        
-    def draw_board(self):
-        # Create grid background
-        board_square = np.zeros((self.N,self.N))
-        Board = np.kron(0.3*np.ones((3,3)), board_square)
-        line = np.ones(3*self.N)
-        # Draw vertical and horizontal grid lines
-        self.ax.plot(self.N*line, np.linspace(0,3*self.N,3*self.N), color = 'gray')
-        self.ax.plot(2*self.N*line, np.linspace(0,3*self.N,3*self.N),color = 'gray')
-        self.ax.plot(np.linspace(0,3*self.N,3*self.N), self.N*line, color = 'gray')
-        self.ax.plot(np.linspace(0,3*self.N,3*self.N), 2*self.N*line, color = 'gray')
-        return Board
+        self._grid_drawn = False
 
-    def draw_circle(self, Board, move, color = 0.3):
-        # Draw AI player symbol (circle)
-        circle = np.zeros((self.N,self.N))
-        for i in range(self.N):
-            for j in range(self.N):
-                if ( (i-self.N/2)**2 + (j-self.N/2)**2) <= (self.N/4)**2 and ( (i-self.N/2)**2 + (j-self.N/2)**2) >= (self.N/5)**2:
-                    circle[i,j] = color
-        Board += np.kron(move.reshape(3,3), circle)
-        return Board
+    def _create_selections(self) -> np.ndarray:
+        """Create one-hot encoded board selections for all 9 cells."""
+        selections = np.zeros((9, BOARD_SIZE, BOARD_SIZE))
+        for index in range(9):
+            selections[index].ravel()[index] = 1
+        return selections
 
-    def draw_cross(self, Board, move, color = 0.3):
-        # Draw human player symbol (X)
-        cross = np.zeros((self.N,self.N))
-        for i in range(self.N):
-            for j in range(self.N):
-                if i == j and i > 10 and i < self.N-10:
-                    cross[i,j] = color
-                if i == self.N-j and j > 10 and j < self.N-10:
-                    cross[i,j] = color
-        Board += np.kron(move.reshape(3,3), cross)
-        return Board
-        
-    def visualize_game_state(self, board):
-        # Convert board state to visual representation
-        Board = self.draw_board()
-        move = np.zeros(9)
-        for i in range(9):
-            if board.ravel()[i] == 1:
-                tmp_move = move.copy()
-                tmp_move[i] = 1
-                Board = self.draw_cross(Board, tmp_move)
-            elif board.ravel()[i] == -1:
-                tmp_move = move.copy()
-                tmp_move[i] = 1
-                Board = self.draw_circle(Board, tmp_move)
-        return Board
+    def _prompt_first_player(self) -> bool:
+        """Ask who should start only when the interactive game is launched."""
+        if self.human_goes_first is None:
+            answer = input('Do you want to go first? (y/any key): ').strip().lower()
+            self.human_goes_first = answer == 'y'
+        return self.human_goes_first
 
-    def highlight_move(self, Board, move, cross = False):
-        # Draw move with visual highlight overlay
-        if cross:
-            Board = self.draw_cross(Board, move, 0.3)
+    def _current_board_state(self) -> np.ndarray:
+        """Return the current aggregated board state."""
+        if not self.boards:
+            return np.zeros((BOARD_SIZE, BOARD_SIZE))
+        return np.sum(self.boards, axis=0)
+
+    def _board_is_full(self, board: np.ndarray) -> bool:
+        """Return True if there are no empty cells left."""
+        return self.agent.is_board_full(board.ravel())
+
+    def _cycle_selection(self, step: int) -> None:
+        """Move the selection cursor left or right."""
+        current_index = int(np.argmax(self.current_selection.ravel()))
+        self.current_selection = self.selections[(current_index + step) % 9]
+
+    def _apply_move(self, move_index: int) -> None:
+        """Add the current move to the board history."""
+        selection = self.selections[move_index]
+        self.boards.append(selection if self.cross else selection * -1)
+
+    def _refresh_marker(self) -> None:
+        """Redraw the board and current selection highlight."""
+        board = self.visualize_game_state(self._current_board_state())
+        board = self.highlight_move(board, self.current_selection, self.cross)
+        if self.marker is not None:
+            self.marker.set_data(board)
+            self.fig.canvas.draw_idle()
+
+    def _announce_result(self, winner: bool | None) -> None:
+        """Show the game result and close the board."""
+        if winner is None:
+            print('This is a Tie!')
+        elif not winner:
+            print('Human wins the game!')
         else:
-            Board = self.draw_circle(Board, move, 0.3)
-        Board += np.kron(move.reshape(3,3), 0.35*np.ones((self.N,self.N)))
-        return Board
+            print('AI wins the game!')
+        time.sleep(RESULT_DELAY_SECONDS)
+        print('Thank You for playing!')
+        time.sleep(CLOSE_DELAY_SECONDS)
+        plt.close('all')
 
-    def check_winner(self, board):
-        # Check if game is won and return (is_terminal, winner)
-        a = np.array([1,1,1])
-        b = np.array([-1,-1,-1])
-        for i in range(3):
-            if (board[i] == a).all() or (board.T[i] == a).all():
-                over = True
-                cross = True
-                return over, cross
-            elif (board[i] == b).all() or (board.T[i] == b).all():
-                over = True
-                cross = False
-                return over, cross
-            elif (np.diag(board) == a).all() or (np.diag(np.fliplr(board)) == a).all():
-                over = True
-                cross = True
-                return over, cross
-            elif (np.diag(board) == b).all() or (np.diag(np.fliplr(board)) == b).all():
-                over = True
-                cross = False
-                return over, cross
-        return False, None
-        
-    def on_key(self, event):
+    def _choose_ai_move(self, flat_board: np.ndarray) -> int:
+        """Select the AI move using the existing heuristics and GTO engine."""
+        new_board = self.agent.gto(flat_board, self.cross)[1]
+        return int(np.argmax(np.abs(new_board - flat_board)))
+
+    def draw_board(self) -> np.ndarray:
+        """Create the board canvas and draw the grid once."""
+        if not self._grid_drawn:
+            for position in range(1, BOARD_SIZE):
+                self.ax.axvline(position * self.N, color=GRID_COLOR)
+                self.ax.axhline(position * self.N, color=GRID_COLOR)
+            self._grid_drawn = True
+        return np.zeros((BOARD_SIZE * self.N, BOARD_SIZE * self.N))
+
+    def draw_circle(self, board: np.ndarray, move: np.ndarray, color: float = MARK_COLOR) -> np.ndarray:
+        """Draw a circle marker on the selected cell."""
+        rows, cols = np.ogrid[:self.N, :self.N]
+        center = (self.N - 1) / 2
+        distance = (rows - center) ** 2 + (cols - center) ** 2
+        circle_mask = ((self.N / 5) ** 2 <= distance) & (distance <= (self.N / 4) ** 2)
+        circle = circle_mask.astype(float) * color
+        board += np.kron(move.reshape(BOARD_SIZE, BOARD_SIZE), circle)
+        return board
+
+    def draw_cross(self, board: np.ndarray, move: np.ndarray, color: float = MARK_COLOR) -> np.ndarray:
+        """Draw a cross marker on the selected cell."""
+        rows, cols = np.indices((self.N, self.N))
+        padding_mask = (rows > 10) & (rows < self.N - 10) & (cols > 10) & (cols < self.N - 10)
+        cross_mask = (np.abs(rows - cols) <= 1) | (np.abs(rows + cols - (self.N - 1)) <= 1)
+        cross = (cross_mask & padding_mask).astype(float) * color
+        board += np.kron(move.reshape(BOARD_SIZE, BOARD_SIZE), cross)
+        return board
+
+    def visualize_game_state(self, board: np.ndarray) -> np.ndarray:
+        """Convert a 3x3 game state into a rendered board image."""
+        rendered_board = self.draw_board()
+        base_move = np.zeros(9)
+        for index, value in enumerate(board.ravel()):
+            if value == 0:
+                continue
+            move = base_move.copy()
+            move[index] = 1
+            if value == 1:
+                rendered_board = self.draw_cross(rendered_board, move)
+            else:
+                rendered_board = self.draw_circle(rendered_board, move)
+        return rendered_board
+
+    def highlight_move(self, board: np.ndarray, move: np.ndarray, cross: bool = False) -> np.ndarray:
+        """Overlay the currently selected move with a highlight."""
+        if cross:
+            board = self.draw_cross(board, move, MARK_COLOR)
+        else:
+            board = self.draw_circle(board, move, MARK_COLOR)
+        board += np.kron(move.reshape(BOARD_SIZE, BOARD_SIZE), HIGHLIGHT_COLOR * np.ones((self.N, self.N)))
+        return board
+
+    def check_winner(self, board: np.ndarray) -> tuple[bool, bool | None]:
+        """Check whether the board has a winner using the shared AI logic."""
+        winner = self.agent.get_winner(board.ravel())
+        return winner is not None, winner
+
+    def on_key(self, event) -> None:
+        """Handle keyboard interaction for moving and placing selections."""
+        current_board = self._current_board_state()
+
         if self.placeholder:
-            win, who = self.check_winner(np.sum(self.boards, axis = 0))
-            print(f'Player {int(who) +1} wins the game!')
-            time.sleep(2)
-            print('Thank You for playing!')
-            time.sleep(1)
-            plt.close('all')
-        elif np.sum(np.sum(self.boards, axis = 0) == 0) == 0:
-            print(' This is a Tie!')
-            time.sleep(2)
-            print('Thank You for playing!')
-            time.sleep(1)
-            plt.close('all')
+            _, winner = self.check_winner(current_board)
+            self._announce_result(winner)
+            return
+
+        if self._board_is_full(current_board):
+            self._announce_result(None)
+            return
+
         if event.key == 'right':
-            Board = np.kron(np.identity(3), np.zeros((self.N,self.N)))
-            for board in self.boards:
-                Board += self.visualize_game_state(board)
-                
-            if np.allclose(self.current_selection, self.selections[8]):
-                idx = -1
-            else:
-                for i in range(8):
-                    if np.allclose(self.current_selection, self.selections[i]):
-                        idx = i
-            self.current_selection = self.selections[idx+1]
-            Board += self.highlight_move(Board, self.current_selection, self.cross)
-            self.marker.set_data(Board)
-            self.fig.canvas.draw_idle()
-        elif event.key == 'left':
-            Board = np.kron(np.identity(3), np.zeros((self.N,self.N)))
-            for board in self.boards:
-                Board += self.visualize_game_state(board)
-        
-            for i in range(9):
-                if np.allclose(self.current_selection, self.selections[i]):
-                    idx = i
-            self.current_selection = self.selections[idx-1]
-            Board += self.highlight_move(Board, self.current_selection, self.cross)
-            self.marker.set_data(Board)
-            self.fig.canvas.draw_idle()
-            
-        elif event.key == 'enter':
-            Board = np.kron(0.3*np.ones((3,3)), np.zeros((self.N,self.N)))
-            for board in self.boards:
-                Board += self.visualize_game_state(board)
-            move_index = np.argmax(self.current_selection.ravel())
-            current_board_state = np.zeros(9) + np.sum(self.boards, axis = 0).ravel()
-            if current_board_state[move_index] != 0:
-                print('That space is already taken!')
+            self._cycle_selection(1)
+            self._refresh_marker()
+            return
 
-            else:
-                Board += self.highlight_move(Board, self.current_selection, self.cross)
-                if self.cross:
-                    self.boards.append(self.current_selection )
-                else:
-                    self.boards.append(self.current_selection * -1)
-                win, who = self.check_winner(np.sum(self.boards, axis = 0))
-                if win:
-                    print(f'Player {int(who) +1} wins the game!')
-                    time.sleep(2)
-                    print('Thank You for playing!')
-                    time.sleep(1)
-                    plt.close('all')
-                elif np.sum(np.sum(self.boards, axis = 0) == 0) == 0:
-                    print(' This is a Tie!')
-                    time.sleep(2)
-                    print('Thank You for playing!')
-                    time.sleep(1)
-                    plt.close('all')
-                self.marker.set_data(Board)
-                self.fig.canvas.draw_idle()
-                self.cross = not self.cross
-               
-                time.sleep(0.35)
-                tmp_board = np.sum(self.boards, axis=0).ravel()
-                if np.count_nonzero(tmp_board == 0) == 9: 
-                    move_index = np.random.randint(9)
-                elif  np.count_nonzero(tmp_board == 0) == 8:
-                    if np.argmax(tmp_board.ravel()) == 4:
-                        possible_moves = [1,0,1,0,0,0,1,0,1]
-                        move_index = np.argsort(possible_moves-np.random.rand(9)/100)[-1]
-                    else:
-                        move_index = 4
-                else:
-                    new_board = self.agent.gto(tmp_board, self.cross)[1]
-                    move_index = np.argmax(np.abs(new_board-tmp_board.ravel()))
-              
-                self.current_selection = self.selections[move_index]
-                Board = self.highlight_move(Board, self.current_selection, self.cross)
-                if self.cross:
-                    self.boards.append(self.current_selection)
-                else:
-                    self.boards.append(self.current_selection * -1)
-              
-                self.marker.set_data(Board)
-                self.fig.canvas.draw_idle()
-                self.cross = not self.cross
-              
-                win, who = self.check_winner(np.sum(self.boards, axis = 0))
-                if  who:
-                    self.placeholder = True
+        if event.key == 'left':
+            self._cycle_selection(-1)
+            self._refresh_marker()
+            return
 
-    def initialize_game(self):
-        # Initialize game board
+        if event.key != 'enter':
+            return
+
+        move_index = int(np.argmax(self.current_selection.ravel()))
+        if current_board.ravel()[move_index] != 0:
+            print('That space is already taken!')
+            return
+
+        self._apply_move(move_index)
+        self._refresh_marker()
+
+        current_board = self._current_board_state()
+        win, winner = self.check_winner(current_board)
+        if win:
+            self.placeholder = True
+            self._announce_result(winner)
+            return
+
+        if self._board_is_full(current_board):
+            self._announce_result(None)
+            return
+
+        self.cross = not self.cross
+        time.sleep(AI_DELAY_SECONDS)
+
+        ai_move_index = self._choose_ai_move(current_board.ravel())
+        self.current_selection = self.selections[ai_move_index]
+        self._apply_move(ai_move_index)
+        self._refresh_marker()
+        self.cross = not self.cross
+
+        win, winner = self.check_winner(self._current_board_state())
+        if win:
+            self.placeholder = True
+
+    def initialize_game(self) -> None:
+        """Initialize the game state and render the starting board."""
         self.draw_board()
-        
-        
-        first_move = np.array([0,0,0,0,0,0,0,0,0])    
-        if not self.human_goes_first:
-            first_move[np.random.randint(9)] = 1 
-        self.boards.append(first_move.reshape(3,3))    
-        
-        Board = self.visualize_game_state(self.current_selection)
-        move = self.highlight_move(Board, self.current_selection, cross = False)
-        self.marker = self.ax.imshow(move, cmap = 'gist_earth')
-        
+        self.boards = []
+
+        if not self._prompt_first_player():
+            first_move = np.zeros(9)
+            first_move[np.random.randint(9)] = 1
+            self.boards.append(first_move.reshape(BOARD_SIZE, BOARD_SIZE))
+
+        board = self.visualize_game_state(self._current_board_state())
+        highlighted = self.highlight_move(board, self.current_selection, cross=self.cross)
+        self.marker = self.ax.imshow(highlighted, cmap='gist_earth')
         self.fig.canvas.mpl_connect('key_press_event', self.on_key)
-        
-    def run(self):
+
+    def run(self) -> None:
+        """Start the interactive game window."""
         self.initialize_game()
         plt.show()
 

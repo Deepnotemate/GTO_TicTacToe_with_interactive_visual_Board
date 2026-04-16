@@ -3,19 +3,35 @@ import numpy as np
 
 class TicTacToeAI:
     """Game Theory Optimal AI for Tic Tac Toe using minimax algorithm."""
-    
+
     # Constants for player representation
     HUMAN = 1
     AI = -1
     EMPTY = 0
-    
+
     def __init__(self):
         """Initialize the AI with an empty cache for memoization."""
         self.cache = {}
-    
+
     def _get_player_mark(self, is_human):
         """Get the mark for a player (1 for human, -1 for AI)."""
         return self.HUMAN if is_human else self.AI
+
+    def get_winner(self, board):
+        """Return the winner for a board state.
+
+        Returns:
+            True if human won, False if AI won, None otherwise
+        """
+        if self.check_winning_condition(board, True):
+            return True
+        if self.check_winning_condition(board, False):
+            return False
+        return None
+
+    def is_board_full(self, board):
+        """Return True when no empty cells remain."""
+        return len(self.find_empty_cells(board)) == 0
     
     def _check_line(self, line, target):
         """Check if a line matches the target pattern."""
@@ -47,16 +63,16 @@ class TicTacToeAI:
     
     def evaluate_move(self, board):
         """Score the current board state.
-        
+
         Returns:
             1 if human won, -1 if AI won, 0 if draw/ongoing
         """
-        if self.check_winning_condition(board, True):
+        winner = self.get_winner(board)
+        if winner is True:
             return 1
-        elif self.check_winning_condition(board, False):
+        if winner is False:
             return -1
-        else:
-            return 0
+        return 0
     
     def find_empty_cells(self, board):
         """Find all empty cells on the board.
@@ -96,10 +112,7 @@ class TicTacToeAI:
     
     def _is_game_over(self, board):
         """Check if the game has ended."""
-        human_won = self.check_winning_condition(board, True)
-        ai_won = self.check_winning_condition(board, False)
-        board_full = len(self.find_empty_cells(board)) == 0
-        return human_won or ai_won or board_full
+        return self.get_winner(board) is not None or self.is_board_full(board)
     
     def gto(self, board, is_human):
         """Game Theory Optimal move using minimax algorithm with memoization.
