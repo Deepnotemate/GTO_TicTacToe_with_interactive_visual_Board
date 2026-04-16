@@ -23,10 +23,8 @@ class TicTacToeGame:
     def __init__(self, human_goes_first: bool | None = None, cell_size: int = DEFAULT_CELL_SIZE):
         self.N = cell_size
         self.agent = TicTacToeAI()
-        self.fig, self.ax = plt.subplots()
-        self.ax.set_aspect('equal')
-        self.ax.set_xticks([])
-        self.ax.set_yticks([])
+        self.fig = None
+        self.ax = None
         self.human_goes_first = human_goes_first
 
         self.boards: list[np.ndarray] = []
@@ -43,6 +41,14 @@ class TicTacToeGame:
         for index in range(9):
             selections[index].ravel()[index] = 1
         return selections
+
+    def _ensure_figure(self) -> None:
+        """Create the matplotlib figure only when the interactive UI is needed."""
+        if self.fig is None or self.ax is None:
+            self.fig, self.ax = plt.subplots()
+            self.ax.set_aspect('equal')
+            self.ax.set_xticks([])
+            self.ax.set_yticks([])
 
     def _prompt_first_player(self) -> bool:
         """Ask who should start only when the interactive game is launched."""
@@ -108,7 +114,7 @@ class TicTacToeGame:
 
     def draw_board(self) -> np.ndarray:
         """Create the board canvas and draw the grid once."""
-        if not self._grid_drawn:
+        if self.ax is not None and not self._grid_drawn:
             for position in range(1, BOARD_SIZE):
                 self.ax.axvline(position * self.N, color=GRID_COLOR)
                 self.ax.axhline(position * self.N, color=GRID_COLOR)
@@ -233,6 +239,7 @@ class TicTacToeGame:
 
     def initialize_game(self) -> None:
         """Initialize the game state and render the starting board."""
+        self._ensure_figure()
         self.draw_board()
         self.boards = []
 
